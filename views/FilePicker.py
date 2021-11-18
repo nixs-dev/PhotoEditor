@@ -9,28 +9,34 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from backend import PhotoEditorBackEnd as PEback
-from editorBrowser import Ui_EditorWindow
+import controllers.FileFinder as Finder
+import views.Editor as Editor
+from controllers.Workspace import Workspace as WorkspaceManager
 
-class Ui_MainWindow(object):
-    def selectedImage(self, item):
-        self.editorWindow = QtWidgets.QMainWindow()
-        self.editorClass = Ui_EditorWindow()
-        self.editorWindow.show()
-        self.editorClass.setupUi(self.editorWindow, item.text())
 
-        self.thisWindow.close()
+class Ui_FilePicker(object):
+    this_window = None
 
-    def setFilesList(self) :
-        files = PEback.showFiles(PEback)
+    def selected_image(self, item):
+        image_path = WorkspaceManager.copy_image_to_workspace(item.text())
+
+        self.editor_window = QtWidgets.QMainWindow()
+        self.ui_editor = Editor.Ui_EditorWindow()
+        self.editor_window.show()
+        self.this_window.close()
+        self.ui_editor.setup_ui(self.editor_window, image_path)
+
+    def set_files_list(self) :
+        files = Finder.FileFinder.show_files()
 
         for f in files:
             self.filesList.addItem(f)
 
-        self.filesList.itemClicked.connect(self.selectedImage)
+        self.filesList.itemClicked.connect(self.selected_image)
 
-    def setupUi(self, MainWindow):
-        self.thisWindow = MainWindow
+    def setup_ui(self, MainWindow):
+        self.this_window = MainWindow
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -53,22 +59,13 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.retranslateUi(MainWindow)
+        self.retranslate_ui(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        self.setFilesList()
+        self.set_files_list()
 
-    def retranslateUi(self, MainWindow):
+    def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Select a file"))
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
