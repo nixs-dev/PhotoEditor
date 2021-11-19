@@ -24,7 +24,7 @@ class Ui_Dialog(object):
 
     def update_pixel_color(self):
         self.this_dialog.close()
-        self.editor.change_pixel_color(self.manipulated_frame, self.pixel_old_color, self.color_tuple)
+        self.editor.change_pixel_color(self.manipulated_frame, self.pixel_old_color, self.color_tuple, True)
 
     def color_value_changed(self, color_type, value):
         if color_type == 'R':

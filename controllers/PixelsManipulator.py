@@ -18,6 +18,7 @@ class PixelsManipulator(QtCore.QThread):
     already_shown = []
     color_found = QtCore.pyqtSignal(tuple)
     preview_saved = QtCore.pyqtSignal(str)
+    version_changed = QtCore.pyqtSignal(int)
     finished = QtCore.pyqtSignal()
 
     def __init__(self, image):
@@ -34,15 +35,28 @@ class PixelsManipulator(QtCore.QThread):
         self.image_width, self.image_height = self.image.size
         self.image_extension = self.image_original_path.split('.')[-1]
 
-    def change_color(self, color_to_replace, replace_by):
+    def change_color(self, pixel_coordinates, color_to_replace, replace_by, new_change):
         for x in range(self.image_width):
             for y in range(self.image_height):
                 p = self.pixels[x, y]
                 if p == color_to_replace:
                     self.pixels[x, y] = replace_by
 
-        preview_path = WorkspaceManager.save_preview(self.image, self.image_extension)
-        self.preview_saved.emit(preview_path)
+        if new_change:
+            change = {
+                        'pixel_x': pixel_coordinates['x'],
+                        'pixel_y': pixel_coordinates['y'],
+                        'old': list(color_to_replace),
+                        'new': list(replace_by)
+                      }
+
+            preview_path = WorkspaceManager.save_preview(self.image, self.image_extension, change)
+            self.preview_saved.emit(preview_path)
+        else:
+            preview_path = WorkspaceManager.undo(self.image_extension)
+            self.preview_saved.emit(preview_path)
+
+        self.version_changed.emit(WorkspaceManager.get_last_preview())
 
     def check_colors(self):
         for x in range(self.image_width):

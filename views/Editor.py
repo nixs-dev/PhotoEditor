@@ -36,9 +36,10 @@ class Ui_EditorWindow(object):
             elif child.layout() is not None:
                 self.clear_pixels(child.layout())
 
-    def change_pixel_color(self, frame_changed, old_color, new_color):
-        self.colorFounder.change_color(old_color, new_color)
-        frame_changed.setStyleSheet(f'background-color: rgba{new_color}; border: None;')
+    def change_pixel_color(self, frame_changed, old_color, new_color, new_change):
+        self.colorFounder.change_color(frame_changed.place_on, old_color, new_color, new_change)
+        frame_changed.setStyleSheet(f'background-color: rgba{new_color}; border: 1px solid black;')
+        frame_changed.color_code = new_color
 
     def finished_scan(self):
         self.all_colors_loaded = True
@@ -86,6 +87,7 @@ class Ui_EditorWindow(object):
         self.colorFounder = PM.PixelsManipulator(self.image)
         self.colorFounder.color_found.connect(self.set_color)
         self.colorFounder.preview_saved.connect(self.show_preview)
+        self.colorFounder.version_changed.connect(self.set_button_undo_state)
         self.colorFounder.finished.connect(self.finished_scan)
         self.colorFounder.start()
 
@@ -99,6 +101,17 @@ class Ui_EditorWindow(object):
         self.ui.setup_ui(self, self.Dialog, frame)
         self.Dialog.show()
 
+    def set_button_undo_state(self, version):
+        if version == 0:
+            self.undo_button.setEnabled(False)
+        else:
+            self.undo_button.setEnabled(True)
+
+    def undo_change(self):
+        change = WorkspaceManager.get_current_change()
+        frame = self.pixels_view_layout.itemAtPosition(change['pixel_x'], change['pixel_y'])
+        self.change_pixel_color(frame.widget(), tuple(change['new']), tuple(change['old']), False)
+
     def on_close_window(self, event):
         WorkspaceManager.clear_work_space()
         event.accept()
@@ -108,7 +121,7 @@ class Ui_EditorWindow(object):
         self.image = image_path
 
         EditorWindow.setObjectName("EditorWindow")
-        EditorWindow.resize(911, 600)
+        EditorWindow.setFixedSize(911, 700)
         EditorWindow.closeEvent = partial(self.on_close_window)
         self.centralwidget = QtWidgets.QWidget(EditorWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -126,6 +139,11 @@ class Ui_EditorWindow(object):
         self.colorsFound.setObjectName("colorsFound")
         self.pixels_view_layout = QtWidgets.QGridLayout(self.colorsFound)
         self.scrollArea.setWidget(self.colorsFound)
+        self.undo_button = QtWidgets.QPushButton(self.centralwidget)
+        self.undo_button.setText('Undo')
+        self.undo_button.setGeometry(QtCore.QRect(800, 600, 50, 50))
+        self.undo_button.clicked.connect(self.undo_change)
+        self.undo_button.setEnabled(False)
 
         EditorWindow.setCentralWidget(self.centralwidget)
 
