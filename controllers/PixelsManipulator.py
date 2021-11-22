@@ -13,8 +13,6 @@ class PixelsManipulator(QtCore.QThread):
     image_height = 0
     image_extension = ''
     pixels = []
-    dark = (0, 0, 0, 255)
-    red = (255, 0, 0, 255)
     already_shown = []
     color_found = QtCore.pyqtSignal(tuple)
     preview_saved = QtCore.pyqtSignal(str)
