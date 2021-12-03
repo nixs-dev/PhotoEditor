@@ -1,3 +1,3 @@
-from controllers.Workspace import Workspace as WorkspaceManager
+from controllers.PixelsManipulator import PixelsManipulator
 
-WorkspaceManager.clear_work_space()
+pm = PixelsManipulator('a.jpg')

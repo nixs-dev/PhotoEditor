@@ -12,8 +12,7 @@ class PixelsManipulator(QtCore.QThread):
     image_width = 0
     image_height = 0
     image_extension = ''
-    pixels = []
-    already_shown = []
+    all_pixels = []
     color_found = QtCore.pyqtSignal(tuple)
     preview_saved = QtCore.pyqtSignal(str)
     version_changed = QtCore.pyqtSignal(int)
@@ -25,20 +24,20 @@ class PixelsManipulator(QtCore.QThread):
         self.load_image()
 
     def run(self):
-        self.check_colors()
+        self.show_all_collors()
 
     def load_image(self):
         self.image = Image.open(self.image_original_path)
-        self.pixels = self.image.load()
+        self.all_pixels = self.image.load()
         self.image_width, self.image_height = self.image.size
         self.image_extension = self.image_original_path.split('.')[-1]
 
     def change_color(self, pixel_coordinates, color_to_replace, replace_by, new_change):
         for x in range(self.image_width):
             for y in range(self.image_height):
-                p = self.pixels[x, y]
+                p = self.all_pixels[x, y]
                 if p == color_to_replace:
-                    self.pixels[x, y] = replace_by
+                    self.all_pixels[x, y] = replace_by
 
         if new_change:
             change = {
@@ -56,15 +55,20 @@ class PixelsManipulator(QtCore.QThread):
 
         self.version_changed.emit(WorkspaceManager.get_last_preview())
 
-    def check_colors(self):
+    def show_all_collors(self):
+        pixels = {}
+
         for x in range(self.image_width):
             for y in range(self.image_height):
-                p = self.pixels[x, y]
-                if p not in self.already_shown:
-                    self.already_shown.append(p)
-                    self.color_found.emit(p)
-                    sleep(0.005)
+                p = self.all_pixels[x, y]
+                if p not in pixels:
+                    pixels[p] = 1
+                else:
+                    pixels[p] += 1
+
+        pixels = sorted(pixels, key=lambda i: pixels[i], reverse=True)
+
+        for pixel in pixels:
+            self.color_found.emit(pixel)
+            sleep(0.0001)
         self.finished.emit()
-
-
-
